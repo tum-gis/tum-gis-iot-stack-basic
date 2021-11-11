@@ -1,0 +1,221 @@
+version: '3.9'
+
+# Volumes #####################################################################
+volumes:
+  caddy_config:
+
+  caddy_data:
+    # external: true
+
+  grafana_data:
+    # external: true
+
+  grafana_config:
+
+  frost_db_data:
+    # external: true
+
+  nodered_data:
+    # external: true
+
+# Networks ####################################################################
+networks:
+  net:
+    driver: overlay
+    attachable: true
+
+# Services ####################################################################
+services:
+  # Caddy ---------------------------------------------------------------------
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:${CADDY_VERSION:?CADDY_VERSION not set}
+    # container_name: caddy
+    ports:
+      - 80:80
+      - 443:443
+      # - 2019:2019
+    networks:
+      - net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -o /dev/null --silent --head --write-out '%{http_code}\n' http://localhost:2019/metrics | grep 200"]
+      # interval: 1m30s
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+    labels:
+      caddy.email: "${ADMIN_EMAIL}"
+      # Avoids exceeding rate limit for Let's Encrypt certificates
+      # Disable to obtain production SSL certificate
+      # https://caddyserver.com/docs/automatic-https#testing
+      caddy.acme_ca: "https://acme-staging-v02.api.letsencrypt.org/directory"
+
+  # FROST Server - Web --------------------------------------------------------
+  frost-web:
+    image: fraunhoferiosb/frost-server:${FROST_VERSION:?FROST_VERSION not set}
+    # container_name: frost-web
+    networks:
+      - net
+    ports:
+      - 1883:1883
+      # - 8080:8080
+    depends_on:
+      frost-db:
+        condition: service_healthy
+      caddy:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", 'bash', '-c', 'curl -f "http://127.0.0.1:8080/FROST-Server/"']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    environment:
+      - serviceRootUrl=https://${DOMAIN:?DOMAIN not set}${FROST_SUBPATH:?FROST_SUBPATH not set}
+      - http_cors_enable=true
+      - http_cors_allowed.origins=*
+      - persistence_db_driver=org.postgresql.Driver
+      - persistence_db_url=jdbc:postgresql://frost-db:5432/${FROST_DB_NAME:?FROST_DB_NAME not set}
+      - persistence_db_username=${FROST_DB_USER:?FROST_DB_USER not set}
+      - persistence_db_password=${FROST_DB_PASSWORD:?FROST_DB_PASSWORD not set}
+      - persistence_autoUpdateDatabase=true
+      - persistence_alwaysOrderbyId=true
+      - persistence_queryTimeout=240
+    labels:
+      caddy: "${DOMAIN:?DOMAIN not set}"
+      caddy.handle_path: "${FROST_SUBPATH:?FROST_SUBPATH not set}/*"
+      caddy.handle_path.0_rewrite: "* /FROST-Server{uri}"
+      caddy.handle_path.1_reverse_proxy: "{{upstreams http 8080}}"
+      caddy.redir: "${FROST_SUBPATH:?FROST_SUBPATH not set} ${FROST_SUBPATH:?FROST_SUBPATH not set}/"
+
+      # Use this if no suburl for FROST is used
+      # caddy.handle: "/FROST-Server/*"
+      # caddy.handle.reverse_proxy: "{{upstreams http 8080}}"
+      # caddy.redir: "/FROST-Server /FROST-Server/"
+
+  # FROST Server - DB ---------------------------------------------------------
+  frost-db:
+    image: "postgis/postgis:${FROST_DB_VERSION:?FROST_DB_VERSION not set}"
+    # container_name: frost-db
+    # ports:
+    #   - 5432:5432
+    networks:
+      - net
+    shm_size: '1gb'
+    environment:
+      POSTGRES_DB: "${FROST_DB_NAME:?FROST_DB_NAME not set}"
+      POSTGRES_USER: "${FROST_DB_USER:?FROST_DB_USER not set}"
+      POSTGRES_PASSWORD: "${FROST_DB_PASSWORD:?FROST_DB_PASSWORD not set}"
+    volumes:
+      - frost_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${FROST_DB_USER:?FROST_DB_USER not set} -d ${FROST_DB_NAME:?FROST_DB_NAME not set}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Adapt and uncomment for optimized DB settings with: https://pgtune.leopard.in.ua/#/
+    command:
+      postgres
+      -c max_connections=100
+      -c shared_buffers=7680MB
+      -c effective_cache_size=23040MB
+      -c maintenance_work_mem=1920MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=19660kB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+      -c max_worker_processes=8
+      -c max_parallel_workers_per_gather=4
+      -c max_parallel_workers=8
+      -c max_parallel_maintenance_workers=4
+
+# Grafana -------------------------------------------------------------------
+  grafana:
+    # container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - grafana_config:/etc/grafana
+    networks:
+      - net
+    # ports:
+    #  - 3000:3000/tcp
+    restart: unless-stopped
+    depends_on:
+      caddy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", 'bash', '-c', 'wget -S "http://127.0.0.1:3000/api/health" |& grep "200 OK"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    build:
+      context: grafana
+      # dockerfile:
+      args:
+        - BASEIMAGE_TAG=${GRAFANA_VERSION:?GRAFANA_VERSION not set}
+    environment:
+      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,
+        grafana-worldmap-panel,marcusolsson-json-datasource,linksmart-sensorthings-datasource,snuids-trafficlights-panel
+        ,https://github.com/briangann/grafana-gauge-panel/releases/download/v0.0.9/briangann-gauge-panel-0.0.9.zip;briangann-gauge-panel"
+        # New home of the FROST SensorThingsAPI datasource plugin. As of 2021-12, error with mouse over in panel.
+        #,https://github.com/FraunhoferIOSB/frost-sensorthings-datasource/archive/refs/tags/v1.4.0.zip;frost-sensorthings-datasource"
+      GF_SERVER_DOMAIN: "${DOMAIN:?DOMAIN not set}"
+      GF_SERVER_ROOT_URL: "https://${DOMAIN:?DOMAIN not set}${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_DATE_FORMATS_FULL_DATE: "YYYY.MM.DD HH:mm:ss"
+      GF_DATE_FORMATS_INTERVAL_HOUR: "DD.MM HH:mm"
+      GF_DATE_FORMATS_INTERVAL_DAY: "DD.MM"
+      GF_DATE_FORMATS_INTERVAL_MONTH: "YYYY.MM"
+      # Admin user
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:?GRAFANA_ADMIN_USER not set}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD not set}"
+    labels:
+      caddy: "${DOMAIN:?DOMAIN not set}"
+      caddy.handle: "${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}/*"
+      caddy.handle.reverse_proxy: "{{upstreams http 3000}}"
+      caddy.redir: "${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set} ${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}/"
+
+  # NodeRED -------------------------------------------------------------------
+  nodered:
+    image: nodered/node-red
+    # container_name: nodered
+    networks:
+      - net
+    # ports:
+    #   - 1880:1880
+    volumes:
+      - nodered_data:/data
+    restart: unless-stopped
+    environment:
+      DOMAIN: "${DOMAIN:?DOMAIN not set}"
+      NODE_RED_CREDENTIAL_SECRET: "${NODE_RED_CREDENTIAL_SECRET:?NODE_RED_CREDENTIAL_SECRET not set}"
+      TZ: "Europe/Berlin"
+      NODE_RED_ENABLE_PROJECTS: "${NODE_RED_ENABLE_PROJECTS:?NODE_RED_ENABLE_PROJECTS not set}"
+      # NODE_OPTIONS: "--max_old_space_size=128"
+    build:
+      context: nodered
+      # dockerfile:
+      args:
+        - BASEIMAGE_TAG=${NODE_RED_VERSION:?NODE_RED_VERSION not set}
+    labels:
+      caddy: "${DOMAIN:?DOMAIN not set}"
+      # Serve Node-RED from subpath /nodered
+      caddy.handle_path: "${NODE_RED_SUBPATH:?NODE_RED_SUBPATH not set}/*"
+      caddy.handle_path.reverse_proxy: "{{upstreams http 1880}}"
+       # Serve Node-RED UI from subpath /nodered/ui
+      caddy.handle_path_1: "${NODE_RED_SUBPATH:?NODE_RED_SUBPATH not set}/ui/*"
+      caddy.handle_path_1.rewrite: "* /ui{uri}"
+      caddy.handle_path_1.reverse_proxy: "{{upstreams http 1880}}"
+      # Handle URLs with no trailing /
+      caddy.redir: "${NODE_RED_SUBPATH:?NODE_RED_SUBPATH not set} ${NODE_RED_SUBPATH:?NODE_RED_SUBPATH not set}/"
+      caddy.redir_1: "${NODE_RED_SUBPATH:?NODE_RED_SUBPATH not set}/ui ${NODE_RED_SUBPATH:?NODE_RED_SUBPATH not set}/ui/"
