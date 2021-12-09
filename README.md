@@ -17,7 +17,7 @@ This repo contains the TUM-GI IoT Stack consists of:
 
 ## Setup
 
-### Create volumes
+### Create external volumes (recommended, not mandatory)
 
 ```shell
 docker volume create caddy_config
@@ -31,43 +31,47 @@ docker volume create nodered_data
 ### Configuration
 
 First, clone this repo and switch to the cloned folder. The folder name will be used as name for
-this stock in Docker.
+this stack in Docker.
 
 ```shell
 git clone https://github.com/tum-gis/tum-gis-iot-stack-basic.git myStackname
 cd myStackname
 ```
 
-Edit `.env` according to your needs. Make sure `DOMAIN`, `FROST_BASEURL`, `GRAFANA_BASEURL` are set
-correctly. `DOMAIN` will usually be part of `FROST_BASEURL` and `GRAFANA_BASEURL`:
+Edit `.env` according to your needs. Make sure to set `DOMAIN` to
+your DNS name, e.g. mydomain.com. For local testing use `localhost`.
+`ADMIN_EMAIL` is only used for notifications regarding automated SSL
+certificate management.
 
-```shell
-DOMAIN=example.de
-FROST_BASEURL=https://example.de/frost
-GRAFANA_BASEURL=https://example.de/grafana
-```
-
-The suburl, e.g. `/frost` for FROST-Server, need to be compatible with the reverse proxy settings in
-`docker-compose.yml`:
-
-```yml
-  frost-web:
-
-    # ...
-    # ...
-
-    labels:
-      caddy: "${DOMAIN:?DOMAIN not set}"
-      caddy.handle_path: "/frost/*"
-      caddy.handle_path.0_rewrite: "* /FROST-Server{uri}"
-      caddy.handle_path.1_reverse_proxy: "{{upstreams http 8080}}"
-      caddy.redir: "/frost /frost/"
-```
-
-Other configurations are described here: https://github.com/lucaslorentz/caddy-docker-proxy
+Use the `*_SUBPATH` variables to
+set the url subpath, where the services should be available.
+For instance, if you set `FROST_SUBPATH` to `/frost` the FROST-Server
+will be available at: `https://DOMAIN/FROST_SUBPATH`, https://mydomain.com/frost.
 
 ### Start containers
 
+After the configuration is finished, you can bring up the stack
+using `docker compose`.
+
 ```shell
 docker compose up --build -d
+```
+
+When the stack has fully booted, the services are available at:
+
+* FROST-Server: https://DOMAIN/FROST_SUBPATH
+* Node-RED: https://DOMAIN/NODERED_SUBPATH
+* Grafana: https://DOMAIN/GRAFANA_SUBPATH
+
+Run `docker compose ps` to check the health status of the stack. All services should be listed as *healthy*.
+
+```
+
+❯ docker compose ps
+NAME                                  COMMAND                  SERVICE             STATUS              PORTS
+myStackname-caddy-1       "/bin/caddy docker-p…"   caddy               running (healthy)   0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp
+myStackname-frost-db-1    "docker-entrypoint.s…"   frost-db            running (healthy)   5432/tcp
+myStackname-frost-web-1   "catalina.sh run"        frost-web           running (healthy)   0.0.0.0:1883->1883/tcp
+myStackname-grafana-1     "/run.sh"                grafana             running (healthy)   3000/tcp
+myStackname-nodered-1     "npm --no-update-not…"   nodered             running (healthy)   1880/tcp
 ```
