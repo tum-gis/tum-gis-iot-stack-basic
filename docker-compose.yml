@@ -67,8 +67,6 @@ services:
     depends_on:
       frost-db:
         condition: service_healthy
-      caddy:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", 'bash', '-c', 'curl -f "http://127.0.0.1:8080/FROST-Server/"']
@@ -150,9 +148,6 @@ services:
     # ports:
     #  - 3000:3000/tcp
     restart: unless-stopped
-    depends_on:
-      caddy:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", 'bash', '-c', 'wget -S "http://127.0.0.1:3000/api/health" |& grep "200 OK"']
       interval: 10s
