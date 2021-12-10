@@ -49,11 +49,12 @@ services:
       - caddy_config:/config
     restart: unless-stopped
     labels:
-      caddy.email: "${ADMIN_EMAIL}"
+      # caddy.email: "${ADMIN_EMAIL}"
       # Avoids exceeding rate limit for Let's Encrypt certificates
       # Disable to obtain production SSL certificate
       # https://caddyserver.com/docs/automatic-https#testing
-      caddy.acme_ca: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      # caddy.acme_ca: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      caddy.auto_https: "off"
 
   # FROST Server - Web --------------------------------------------------------
   frost-web:
@@ -74,7 +75,7 @@ services:
       timeout: 5s
       retries: 20
     environment:
-      - serviceRootUrl=https://${DOMAIN:?DOMAIN not set}${FROST_SUBPATH:?FROST_SUBPATH not set}
+      - serviceRootUrl=http://${DOMAIN:?DOMAIN not set}${FROST_SUBPATH:?FROST_SUBPATH not set}
       - http_cors_enable=true
       - http_cors_allowed.origins=*
       - persistence_db_driver=org.postgresql.Driver
@@ -165,7 +166,7 @@ services:
         # New home of the FROST SensorThingsAPI datasource plugin. As of 2021-12, error with mouse over in panel.
         #,https://github.com/FraunhoferIOSB/frost-sensorthings-datasource/archive/refs/tags/v1.4.0.zip;frost-sensorthings-datasource"
       GF_SERVER_DOMAIN: "${DOMAIN:?DOMAIN not set}"
-      GF_SERVER_ROOT_URL: "https://${DOMAIN:?DOMAIN not set}${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}"
+      GF_SERVER_ROOT_URL: "http://${DOMAIN:?DOMAIN not set}${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}"
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
       GF_DATE_FORMATS_FULL_DATE: "YYYY.MM.DD HH:mm:ss"
       GF_DATE_FORMATS_INTERVAL_HOUR: "DD.MM HH:mm"
