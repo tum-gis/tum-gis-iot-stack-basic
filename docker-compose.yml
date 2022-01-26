@@ -161,7 +161,8 @@ services:
     environment:
       GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,
         grafana-worldmap-panel,marcusolsson-json-datasource,linksmart-sensorthings-datasource,snuids-trafficlights-panel
-        ,https://github.com/briangann/grafana-gauge-panel/releases/download/v0.0.9/briangann-gauge-panel-0.0.9.zip;briangann-gauge-panel"
+        ,https://github.com/briangann/grafana-gauge-panel/releases/download/v0.0.9/briangann-gauge-panel-0.0.9.zip;briangann-gauge-panel,
+        citilogics-geoloop-panel"
         # New home of the FROST SensorThingsAPI datasource plugin. As of 2021-12, error with mouse over in panel.
         #,https://github.com/FraunhoferIOSB/frost-sensorthings-datasource/archive/refs/tags/v1.4.0.zip;frost-sensorthings-datasource"
       GF_SERVER_DOMAIN: "${DOMAIN:?DOMAIN not set}"
