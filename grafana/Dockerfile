@@ -1,5 +1,5 @@
 # Builder
-ARG BASEIMAGE_TAG='7.5.9'
+ARG BASEIMAGE_TAG='7.5.13'
 # https://hub.docker.com/r/grafana/grafana/tags/
 FROM grafana/grafana:${BASEIMAGE_TAG}
 

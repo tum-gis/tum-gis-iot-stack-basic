@@ -1,6 +1,6 @@
 {
   "name": "node-red-docker",
-  "version": "2.1.4",
+  "version": "2.1.6",
   "description": "Low-code programming for event-driven applications",
   "homepage": "http://nodered.org",
   "license": "Apache-2.0",
@@ -28,7 +28,7 @@
     }
   ],
   "dependencies": {
-    "node-red": "2.1.4",
+    "node-red": "2.1.6",
     "node-red-contrib-buffer-array": "*",
     "node-red-contrib-cayennelpp-extended": "*",
     "node-red-contrib-counter": "*",
