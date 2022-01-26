@@ -182,7 +182,6 @@ services:
 
   # NodeRED -------------------------------------------------------------------
   nodered:
-    image: nodered/node-red
     # container_name: nodered
     networks:
       - net
