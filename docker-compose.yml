@@ -74,16 +74,24 @@ services:
       timeout: 5s
       retries: 20
     environment:
-      - serviceRootUrl=https://${DOMAIN:?DOMAIN not set}${FROST_SUBPATH:?FROST_SUBPATH not set}
-      - http_cors_enable=true
-      - http_cors_allowed_origins=*
-      - persistence_db_driver=org.postgresql.Driver
-      - persistence_db_url=jdbc:postgresql://frost-db:5432/${FROST_DB_NAME:?FROST_DB_NAME not set}
-      - persistence_db_username=${FROST_DB_USER:?FROST_DB_USER not set}
-      - persistence_db_password=${FROST_DB_PASSWORD:?FROST_DB_PASSWORD not set}
-      - persistence_autoUpdateDatabase=true
-      - persistence_alwaysOrderbyId=true
-      - persistence_queryTimeout=240
+      serviceRootUrl: "https://${DOMAIN:?DOMAIN not set}${FROST_SUBPATH:?FROST_SUBPATH not set}"
+      http_cors_enable: "true"
+      http_cors_allowed_origins: "*"
+      persistence_db_driver: "org.postgresql.Driver"
+      persistence_db_url: "jdbc:postgresql://frost-db:5432/${FROST_DB_NAME:?FROST_DB_NAME not set}"
+      persistence_db_username: "${FROST_DB_USER:?FROST_DB_USER not set}"
+      persistence_db_password: "${FROST_DB_PASSWORD:?FROST_DB_PASSWORD not set}"
+      persistence_autoUpdateDatabase: "true"
+      persistence_alwaysOrderbyId: "true"
+      persistence_queryTimeout: "240"
+      # Uncomment this to enable BasicAuth
+      # https://fraunhoferiosb.github.io/FROST-Server/settings/auth.html
+      # auth_provider: "de.fraunhofer.iosb.ilt.frostserver.auth.basic.BasicAuthProvider"
+      # auth_db_driver: "org.postgresql.Driver"
+      # auth_db_url: "jdbc:postgresql://frost-db:5432/${FROST_DB_NAME:?FROST_DB_NAME not set}"
+      # auth_db_username: "${FROST_DB_USER:?FROST_DB_USER not set}"
+      # auth_db_password: "${FROST_DB_PASSWORD:?FROST_DB_PASSWORD not set}"
+      # auth_autoUpdateDatabase: "true"
     labels:
       caddy: "${DOMAIN:?DOMAIN not set}"
       caddy.handle_path: "${FROST_SUBPATH:?FROST_SUBPATH not set}/*"
@@ -100,8 +108,8 @@ services:
   frost-db:
     image: "postgis/postgis:${FROST_DB_VERSION:?FROST_DB_VERSION not set}"
     # container_name: frost-db
-    # ports:
-    #   - 5432:5432
+    ports:
+     - 5432:5432
     networks:
       - net
     shm_size: '1gb'
