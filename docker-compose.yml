@@ -12,6 +12,9 @@ volumes:
 
   grafana_config:
 
+  grafana_db_data:
+    # external: true
+
   frost_db_data:
     # external: true
 
@@ -108,8 +111,8 @@ services:
   frost-db:
     image: "postgis/postgis:${FROST_DB_VERSION:?FROST_DB_VERSION not set}"
     # container_name: frost-db
-    ports:
-     - 5432:5432
+    # ports:
+    #  - 5432:5432
     networks:
       - net
     shm_size: '1gb'
@@ -122,6 +125,47 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${FROST_DB_USER:?FROST_DB_USER not set} -d ${FROST_DB_NAME:?FROST_DB_NAME not set}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Adapt and uncomment for optimized DB settings with: https://pgtune.leopard.in.ua/#/
+    command:
+      postgres
+      -c max_connections=100
+      -c shared_buffers=7680MB
+      -c effective_cache_size=23040MB
+      -c maintenance_work_mem=1920MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=19660kB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+      -c max_worker_processes=8
+      -c max_parallel_workers_per_gather=4
+      -c max_parallel_workers=8
+      -c max_parallel_maintenance_workers=4
+
+  # Grafana DB ----------------------------------------------------------------
+  grafana-db:
+    image: "postgres:14-alpine"
+    # container_name: GRAFANA-db
+    # ports:
+    #   - 5432:5432
+    networks:
+      - net
+    shm_size: '1gb'
+    environment:
+      POSTGRES_DB: "${GRAFANA_DB_NAME:?GRAFANA_DB_NAME not set}"
+      POSTGRES_USER: "${GRAFANA_DB_USER:?GRAFANA_DB_USER not set}"
+      POSTGRES_PASSWORD: "${GRAFANA_DB_PASSWORD:?GRAFANA_DB_PASSWORD not set}"
+    volumes:
+      - grafana_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${GRAFANA_DB_USER:?GRAFANA_DB_USER not set} -d ${GRAFANA_DB_NAME:?GRAFANA_DB_NAME not set}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -166,6 +210,9 @@ services:
       # dockerfile:
       args:
         - BASEIMAGE_TAG=${GRAFANA_VERSION:?GRAFANA_VERSION not set}
+    depends_on:
+      grafana-db:
+        condition: service_healthy
     environment:
       GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,
         grafana-worldmap-panel,marcusolsson-json-datasource,linksmart-sensorthings-datasource,snuids-trafficlights-panel
@@ -183,6 +230,12 @@ services:
       # Admin user
       GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:?GRAFANA_ADMIN_USER not set}"
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD not set}"
+      # DB
+      GF_DATABASE_TYPE: "postgres"
+      GF_DATABASE_HOST: "grafana-db:5432"
+      GF_DATABASE_NAME: ${GRAFANA_DB_NAME:?GRAFANA_DB_NAME not set}
+      GF_DATABASE_USER: ${GRAFANA_DB_USER:?GRAFANA_DB_USER not set}
+      GF_DATABASE_PASSWORD: ${GRAFANA_DB_PASSWORD:?GRAFANA_DB_PASSWORD not set}
     labels:
       caddy: "${DOMAIN:?DOMAIN not set}"
       caddy.handle: "${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}/*"
