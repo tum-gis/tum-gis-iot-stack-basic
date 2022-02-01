@@ -46,10 +46,13 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+    environment:
+      TEST: "theTest"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - caddy_data:/data
       - caddy_config:/config
+      - $PWD/html:/html
     restart: unless-stopped
     labels:
       caddy.email: "${ADMIN_EMAIL}"
@@ -57,6 +60,13 @@ services:
       # Disable to obtain production SSL certificate
       # https://caddyserver.com/docs/automatic-https#testing
       caddy.acme_ca: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      caddy_1: "${DOMAIN:?DOMAIN not set}"
+      caddy_1.redir: "/map /map/"
+      caddy_1.handle_path: "/map/*"
+      caddy_1.handle_path.1_root: "* /html"
+      caddy_1.handle_path.0_file_server:
+      caddy_1.handle_path.2_basicauth: "*"
+      caddy_1.handle_path.2_basicauth.test: "JDJhJDE0JFJxU2kycjJsa054Ri9EeGg3N2k0T09Xc01WOEI2dUNac3l0RGpJSHhHUHp3SzN3cW4xWmwy"
 
   # FROST Server - Web --------------------------------------------------------
   frost-web:
