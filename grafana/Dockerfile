@@ -1,7 +1,7 @@
 # Builder
-ARG BASEIMAGE_TAG='7.5.13'
+ARG BASEIMAGE_TAG='7.5.10'
 # https://hub.docker.com/r/grafana/grafana/tags/
-FROM grafana/grafana:${BASEIMAGE_TAG}
+FROM grafana/grafana-oss:${BASEIMAGE_TAG}
 
 # Provisioning
 # COPY dashboards.yml /etc/grafana/provisioning/dashboards/
