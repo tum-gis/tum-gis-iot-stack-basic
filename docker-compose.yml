@@ -108,8 +108,8 @@ services:
   frost-db:
     image: "postgis/postgis:${FROST_DB_VERSION:?FROST_DB_VERSION not set}"
     # container_name: frost-db
-    ports:
-     - 5432:5432
+    # ports:
+    #  - 5432:5432
     networks:
       - net
     shm_size: '1gb'
