@@ -18,6 +18,9 @@ volumes:
   nodered_data:
     # external: true
 
+  mongodb_data:
+    # external: true
+
 # Networks ####################################################################
 networks:
   net:
@@ -228,3 +231,39 @@ services:
       # Handle URLs with no trailing /
       caddy.redir: "${NODE_RED_SUBPATH:?NODE_RED_SUBPATH not set} ${NODE_RED_SUBPATH:?NODE_RED_SUBPATH not set}/"
       caddy.redir_1: "${NODE_RED_SUBPATH:?NODE_RED_SUBPATH not set}/ui ${NODE_RED_SUBPATH:?NODE_RED_SUBPATH not set}/ui/"
+
+  # MongoDB -------------------------------------------------------------------
+  mongo:
+    image: mongo
+    restart: unless-stopped
+    networks:
+    - net
+    volumes:
+    - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGODB_ADMIN_USERNAME:?MONGODB_ADMIN_USERNAME not set}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_ADMIN_PASSWORD:?MONGODB_ADMIN_PASSWORD not set}"
+
+  # MongoDB -------------------------------------------------------------------
+  mongo-express:
+    image: mongo-express
+    restart: unless-stopped
+    # ports:
+    #   - 8081:8081
+    networks:
+    - net
+    depends_on:
+      mongo:
+        condition: service_started
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "${MONGODB_ADMIN_USERNAME:?MONGODB_ADMIN_USERNAME not set}"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGODB_ADMIN_PASSWORD:?MONGODB_ADMIN_PASSWORD not set}"
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGODB_ADMIN_USERNAME:?MONGODB_ADMIN_USERNAME not set}:${MONGODB_ADMIN_PASSWORD:?MONGODB_ADMIN_PASSWORD not set}@mongo:27017/
+      ME_CONFIG_SITE_BASEURL: ${MONGODB_SUBPATH}/
+    labels:
+      caddy: "${DOMAIN:?DOMAIN not set}"
+      # Serve Node-RED from subpath /nodered
+      # caddy.handle_path: "${MONGODB_SUBPATH:?MONGODB_SUBPATH not set}/*"
+      caddy.handle: "${MONGODB_SUBPATH:?MONGODB_SUBPATH not set}/*"
+      caddy.handle.reverse_proxy: "{{upstreams http 8081}}"
+      caddy.redir: "${MONGODB_SUBPATH:?MONGODB_SUBPATH not set} ${MONGODB_SUBPATH:?MONGODB_SUBPATH not set}/"
