@@ -262,8 +262,7 @@ services:
       ME_CONFIG_SITE_BASEURL: ${MONGODB_SUBPATH}/
     labels:
       caddy: "${DOMAIN:?DOMAIN not set}"
-      # Serve Node-RED from subpath /nodered
-      # caddy.handle_path: "${MONGODB_SUBPATH:?MONGODB_SUBPATH not set}/*"
+      # Serve Mongo Express from subpath /mongo
       caddy.handle: "${MONGODB_SUBPATH:?MONGODB_SUBPATH not set}/*"
       caddy.handle.reverse_proxy: "{{upstreams http 8081}}"
       caddy.redir: "${MONGODB_SUBPATH:?MONGODB_SUBPATH not set} ${MONGODB_SUBPATH:?MONGODB_SUBPATH not set}/"
