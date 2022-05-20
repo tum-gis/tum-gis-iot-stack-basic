@@ -39,7 +39,8 @@
     "node-red-dashboard": "*",
     "node-red-node-tail": "*",
     "node-red-node-ui-table": "*",
-    "node-red-node-email": "*"
+    "node-red-node-email": "*",
+    "node-red-node-mongodb": "*"
   },
   "engines": {
     "node": ">=12"
