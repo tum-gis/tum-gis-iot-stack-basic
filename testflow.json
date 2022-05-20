@@ -1,0 +1,306 @@
+[{
+    "id": "f6f2187d.f17ca8",
+    "type": "tab",
+    "label": "Flow 1",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "e1a7d151a067d19b",
+    "type": "mongodb in",
+    "z": "f6f2187d.f17ca8",
+    "mongodb": "84b04e03e87691f8",
+    "name": "",
+    "collection": "gi3",
+    "operation": "find",
+    "x": 760,
+    "y": 340,
+    "wires": [
+      [
+        "458dbfb444e723e7",
+        "85330c4727cc8351"
+      ]
+    ]
+  },
+  {
+    "id": "458dbfb444e723e7",
+    "type": "debug",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 960,
+    "y": 340,
+    "wires": []
+  },
+  {
+    "id": "7ffec99bf8947255",
+    "type": "function",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "func": "msg.payload = {\n  \"_id\": msg.end_device_ids.dev_eui.toUpperCase()\n};\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 580,
+    "y": 340,
+    "wires": [
+      [
+        "e1a7d151a067d19b"
+      ]
+    ]
+  },
+  {
+    "id": "85330c4727cc8351",
+    "type": "function",
+    "z": "f6f2187d.f17ca8",
+    "name": "cayenne-sta-mapper",
+    "func": "// #############################################################################\n// Runtime #####################################################################\n// #############################################################################\n\n// Settings\nmsg.isMapped = false;\n\n// Test if things is in mappings and has mappings defined\nif (msg.payload && msg.payload.length == 0) {\n  if (msg.payload.mappings && msg.mappings.length > 0) {\n    node.error(\"No dev \" + msg.end_device_ids.dev_eui + \" found in mappings.\", msg);\n    return;\n  }\n}\n\n// Get Thing in mapping for DEV-EUI\nconst thing = msg.payload[0];\nmsg.groupID = thing.group_id;\nmsg.name = thing.name;\n\n// Read mappings to Map: lpp_id -> sta_servers[{sta_url, iot_id}]\nconst mappings = new Map();\nfor (let mapping of thing.mappings) {\n  mappings.set(mapping.lpp_id, mapping.sta_servers);\n}\n\n// Convert cayenne payload to ext. Cayenne payload for POST\nvar arrExtCayenne = [];\nvar arrErrorsLpp = [];\nvar flagLppErr = false;\nvar i = 0;\nvar cntErr = 0;\n\n// Interate over all Cayenne properties\nfor (let key of Object.keys(msg.uplink_message.decoded_payload)) {\n  let lppID = parseInt(key.slice(key.lastIndexOf('_') + 1));\n\n  // Test, if mappings exist for lppID\n  if (mappings.has(lppID)) {\n    // There is a mapping\n\n\n    // Iterate over all mappings\n    for (let map of mappings.get(lppID)) {\n\n      // Construct msg for STA POST\n      var extCayenne = {\n        \"frostURL\": map.sta_url,\n        \"lppID\": lppID,\n        \"iotID\": map.iot_id,\n        \"value\": msg.uplink_message.decoded_payload[key]\n      };\n      arrExtCayenne[i] = extCayenne;\n      i++;\n      msg.isMapped = true\n    }\n  } else {\n    // There is no mapping\n    flagLppErr = true;\n    arrErrorsLpp[cntErr] = lppID;\n    cntErr++;\n\n  }\n}\n\n\n// ###################################################\n\n// Test if an Lpp error occurerd\nif (flagLppErr) {\n\n    \n  node.error(\"DevEUI \" + msg.end_device_ids.dev_eui + \n    \" found, but no mappings defined for LPP channel: \" + \n    arrErrorsLpp.toString() + \". Following LPP channels are mapped: \" + \n    [...new Set(arrExtCayenne.map(item => item.lppID))].toString(), msg\n  );\n    if (arrExtCayenne.lengh == 0 ) {\n      // Nothing mapped ==> return no msg\n      return;\n  }\n}\n\nmsg.extCayenne = arrExtCayenne;\nreturn msg;\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 260,
+    "y": 420,
+    "wires": [
+      [
+        "e4ec1c55.f4da38",
+        "53fae0048647158d"
+      ]
+    ]
+  },
+  {
+    "id": "e4ec1c55.f4da38",
+    "type": "splitter",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "property": "extCayenne",
+    "x": 470,
+    "y": 420,
+    "wires": [
+      [
+        "322890b2.d26e48"
+      ]
+    ]
+  },
+  {
+    "id": "322890b2.d26e48",
+    "type": "function",
+    "z": "f6f2187d.f17ca8",
+    "name": "OGC ",
+    "func": "\n// POST payload\nvar newMsg = { \n    \"url\": msg.payload.frostURL,\n    payload: {\n    \"result\": msg.payload.value, \n    \"phenomenonTime\":  msg.uplink_message.settings.time,\n    \"resultTime\": msg.uplink_message.received_at,\n    \"Datastream\": {\"@iot.id\": msg.payload.iotID}\n    }\n};\n\n// newMsg.headers = {\"Content-type\" : \"application/json\"}\n\nreturn newMsg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 650,
+    "y": 420,
+    "wires": [
+      [
+        "7f291c332ee2d69b"
+      ]
+    ]
+  },
+  {
+    "id": "6afbc6036294e220",
+    "type": "inject",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "props": [],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "x": 150,
+    "y": 120,
+    "wires": [
+      [
+        "76b016ade36d895b"
+      ]
+    ]
+  },
+  {
+    "id": "76b016ade36d895b",
+    "type": "function",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "func": "msg = {\"end_device_ids\":{\"device_id\":\"eui-8765182202e81e01\",\"application_ids\":{\"application_id\":\"tumgis-geo-sensor-web\"},\"dev_eui\":\"8765182202E81E01\",\"join_eui\":\"E89CE2FC9061426D\",\"dev_addr\":\"260B6FEE\"},\"correlation_ids\":[\"as:up:01G2YXK492Z1RKN87YDHF10F42\",\"gs:conn:01G24HA767N1G8NEZQ8EC2V8PJ\",\"gs:up:host:01G24HABAF97RT6QAC817E0EJ5\",\"gs:uplink:01G2YXK42MV2DDM7CPXPA47HSQ\",\"ns:uplink:01G2YXK42MB0YNZ21E3XNC2E5G\",\"rpc:/ttn.lorawan.v3.GsNs/HandleUplink:01G2YXK42M2AVCAWECE80N01YJ\",\"rpc:/ttn.lorawan.v3.NsAs/HandleUplink:01G2YXK4926CA55G8DKSF06VDM\"],\"received_at\":\"2022-05-13T14:36:33.955069170Z\",\"uplink_message\":{\"session_key_id\":\"AYCKAXO1Q/eg6OeS8i65Fw==\",\"f_port\":1,\"f_cnt\":2849,\"frm_payload\":\"AWcA4wJoggRlAdMFZQHbBmUB2wdlAeQIZQGhCWUAFwplACwLAQEMAwHlDQMB3g==\",\"decoded_payload\":{\"temperature_1\":22.7,\"relative_humidity_2\":65,\"luminosity_4\":467,\"luminosity_5\":475,\"luminosity_6\":475,\"luminosity_7\":484,\"luminosity_8\":417,\"luminosity_9\":23,\"luminosity_10\":44,\"digital_out_11\":1,\"analog_out_12\":4.85,\"analog_out_13\":4.78},\"rx_metadata\":[{\"gateway_ids\":{\"gateway_id\":\"eui-b827ebfffe42a733\",\"eui\":\"B827EBFFFE42A733\"},\"time\":\"2022-05-13T14:36:33.731833Z\",\"timestamp\":1767994980,\"rssi\":-36,\"channel_rssi\":-36,\"snr\":9.8,\"location\":{\"latitude\":48.149111649989585,\"longitude\":11.568093895912172,\"altitude\":516,\"source\":\"SOURCE_REGISTRY\"},\"uplink_token\":\"CiIKIAoUZXVpLWI4MjdlYmZmZmU0MmE3MzMSCLgn6//+QqczEOTshcsGGgwI8dn5kwYQxebp5AIgoO3ZpbrJyQEqDAjx2fmTBhCoxfvcAg==\",\"channel_index\":6}],\"settings\":{\"data_rate\":{\"lora\":{\"bandwidth\":125000,\"spreading_factor\":7}},\"coding_rate\":\"4/5\",\"frequency\":\"867700000\",\"timestamp\":1767994980,\"time\":\"2022-05-13T14:36:33.731833Z\"},\"received_at\":\"2022-05-13T14:36:33.748993594Z\",\"consumed_airtime\":\"0.112896s\",\"network_ids\":{\"net_id\":\"000013\",\"tenant_id\":\"ttn\",\"cluster_id\":\"eu1\",\"cluster_address\":\"eu1.cloud.thethings.network\"}},\"_msgid\":\"4efd0c5fbe9a7be8\"};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 320,
+    "y": 120,
+    "wires": [
+      [
+        "5eb476c77b8ebe7b",
+        "7ffec99bf8947255"
+      ]
+    ]
+  },
+  {
+    "id": "5eb476c77b8ebe7b",
+    "type": "debug",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 510,
+    "y": 120,
+    "wires": []
+  },
+  {
+    "id": "a40af3163c0cf582",
+    "type": "comment",
+    "z": "f6f2187d.f17ca8",
+    "name": "TTN, decodedCayenne",
+    "info": "",
+    "x": 210,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "ea3d5e97fa9ad29f",
+    "type": "inject",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "props": [],
+    "repeat": "",
+    "crontab": "",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "x": 130,
+    "y": 300,
+    "wires": [
+      [
+        "58646dbd7ab751e4"
+      ]
+    ]
+  },
+  {
+    "id": "58646dbd7ab751e4",
+    "type": "function",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "func": "msg = {\"end_device_ids\":{\"device_id\":\"eui-8765182202e81\",\"application_ids\":{\"application_id\":\"tumgis-geo-sensor-web\"},\"dev_eui\":\"8765182202E81\",\"join_eui\":\"E89CE2FC9061426D\",\"dev_addr\":\"260B6FEE\"},\"correlation_ids\":[\"as:up:01G2YXK492Z1RKN87YDHF10F42\",\"gs:conn:01G24HA767N1G8NEZQ8EC2V8PJ\",\"gs:up:host:01G24HABAF97RT6QAC817E0EJ5\",\"gs:uplink:01G2YXK42MV2DDM7CPXPA47HSQ\",\"ns:uplink:01G2YXK42MB0YNZ21E3XNC2E5G\",\"rpc:/ttn.lorawan.v3.GsNs/HandleUplink:01G2YXK42M2AVCAWECE80N01YJ\",\"rpc:/ttn.lorawan.v3.NsAs/HandleUplink:01G2YXK4926CA55G8DKSF06VDM\"],\"received_at\":\"2022-05-13T14:36:33.955069170Z\",\"uplink_message\":{\"session_key_id\":\"AYCKAXO1Q/eg6OeS8i65Fw==\",\"f_port\":1,\"f_cnt\":2849,\"frm_payload\":\"AWcA4wJoggRlAdMFZQHbBmUB2wdlAeQIZQGhCWUAFwplACwLAQEMAwHlDQMB3g==\",\"decoded_payload\":{\"temperature_1\":22.7,\"relative_humidity_2\":65,\"luminosity_4\":467,\"luminosity_5\":475,\"luminosity_6\":475,\"luminosity_7\":484,\"luminosity_8\":417,\"luminosity_9\":23,\"luminosity_10\":44,\"digital_out_11\":1,\"analog_out_12\":4.85,\"analog_out_13\":4.78},\"rx_metadata\":[{\"gateway_ids\":{\"gateway_id\":\"eui-b827ebfffe42a733\",\"eui\":\"B827EBFFFE42A733\"},\"time\":\"2022-05-13T14:36:33.731833Z\",\"timestamp\":1767994980,\"rssi\":-36,\"channel_rssi\":-36,\"snr\":9.8,\"location\":{\"latitude\":48.149111649989585,\"longitude\":11.568093895912172,\"altitude\":516,\"source\":\"SOURCE_REGISTRY\"},\"uplink_token\":\"CiIKIAoUZXVpLWI4MjdlYmZmZmU0MmE3MzMSCLgn6//+QqczEOTshcsGGgwI8dn5kwYQxebp5AIgoO3ZpbrJyQEqDAjx2fmTBhCoxfvcAg==\",\"channel_index\":6}],\"settings\":{\"data_rate\":{\"lora\":{\"bandwidth\":125000,\"spreading_factor\":7}},\"coding_rate\":\"4/5\",\"frequency\":\"867700000\",\"timestamp\":1767994980,\"time\":\"2022-05-13T14:36:33.731833Z\"},\"received_at\":\"2022-05-13T14:36:33.748993594Z\",\"consumed_airtime\":\"0.112896s\",\"network_ids\":{\"net_id\":\"000013\",\"tenant_id\":\"ttn\",\"cluster_id\":\"eu1\",\"cluster_address\":\"eu1.cloud.thethings.network\"}},\"_msgid\":\"4efd0c5fbe9a7be8\"};\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 300,
+    "y": 300,
+    "wires": [
+      [
+        "7ffec99bf8947255"
+      ]
+    ]
+  },
+  {
+    "id": "94bffcb56d5421f3",
+    "type": "comment",
+    "z": "f6f2187d.f17ca8",
+    "name": "TTN, decodedCayenne, dev_eui not found",
+    "info": "",
+    "x": 280,
+    "y": 240,
+    "wires": []
+  },
+  {
+    "id": "53fae0048647158d",
+    "type": "debug",
+    "z": "f6f2187d.f17ca8",
+    "name": "msg.mapper",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 410,
+    "y": 520,
+    "wires": []
+  },
+  {
+    "id": "30c91540cd654f70",
+    "type": "catch",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "scope": [
+      "85330c4727cc8351"
+    ],
+    "uncaught": false,
+    "x": 220,
+    "y": 600,
+    "wires": [
+      [
+        "69fb842d4827b0ff"
+      ]
+    ]
+  },
+  {
+    "id": "69fb842d4827b0ff",
+    "type": "debug",
+    "z": "f6f2187d.f17ca8",
+    "name": "ERROR",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": true,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "error.message",
+    "statusType": "msg",
+    "x": 470,
+    "y": 600,
+    "wires": []
+  },
+  {
+    "id": "7f291c332ee2d69b",
+    "type": "debug",
+    "z": "f6f2187d.f17ca8",
+    "name": "POST",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 850,
+    "y": 420,
+    "wires": []
+  },
+  {
+    "id": "84b04e03e87691f8",
+    "type": "mongodb",
+    "hostname": "mongo",
+    "topology": "direct",
+    "connectOptions": "",
+    "port": "27017",
+    "db": "test",
+    "name": ""
+  }
+]

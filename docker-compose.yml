@@ -240,11 +240,14 @@ services:
     - net
     volumes:
     - mongodb_data:/data/db
+    - $PWD/mongodb:/docker-entrypoint-initdb.d
     environment:
       MONGO_INITDB_ROOT_USERNAME: "${MONGODB_ADMIN_USERNAME:?MONGODB_ADMIN_USERNAME not set}"
       MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_ADMIN_PASSWORD:?MONGODB_ADMIN_PASSWORD not set}"
+      MONGO_INITDB_DATABASE: "${MONGODB_INIT_DB:?MONGODB_INIT_DB not set}"
 
-  # MongoDB -------------------------------------------------------------------
+
+  # Mongo Express -------------------------------------------------------------
   mongo-express:
     image: mongo-express
     restart: unless-stopped
@@ -256,13 +259,40 @@ services:
       mongo:
         condition: service_started
     environment:
+      ME_CONFIG_SITE_BASEURL: ${MONGODB_SUBPATH:?MONGODB_SUBPATH not set}/
+      ME_CONFIG_MONGODB_SERVER: 'mongo'
       ME_CONFIG_MONGODB_ADMINUSERNAME: "${MONGODB_ADMIN_USERNAME:?MONGODB_ADMIN_USERNAME not set}"
       ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGODB_ADMIN_PASSWORD:?MONGODB_ADMIN_PASSWORD not set}"
-      ME_CONFIG_MONGODB_URL: mongodb://${MONGODB_ADMIN_USERNAME:?MONGODB_ADMIN_USERNAME not set}:${MONGODB_ADMIN_PASSWORD:?MONGODB_ADMIN_PASSWORD not set}@mongo:27017/
-      ME_CONFIG_SITE_BASEURL: ${MONGODB_SUBPATH}/
+      ME_CONFIG_BASICAUTH_USERNAME: "${MONGODB_ADMIN_USERNAME:?MONGODB_ADMIN_USERNAME not set}"
+      ME_CONFIG_BASICAUTH_PASSWORD: "${MONGODB_ADMIN_PASSWORD:?MONGODB_ADMIN_PASSWORD not set}"
     labels:
       caddy: "${DOMAIN:?DOMAIN not set}"
       # Serve Mongo Express from subpath /mongo
       caddy.handle: "${MONGODB_SUBPATH:?MONGODB_SUBPATH not set}/*"
       caddy.handle.reverse_proxy: "{{upstreams http 8081}}"
       caddy.redir: "${MONGODB_SUBPATH:?MONGODB_SUBPATH not set} ${MONGODB_SUBPATH:?MONGODB_SUBPATH not set}/"
+
+  # Mongo Express -------------------------------------------------------------
+  mongo-express-student:
+    image: mongo-express
+    restart: unless-stopped
+    # ports:
+    #   - 8081:8081
+    networks:
+    - net
+    depends_on:
+      mongo:
+        condition: service_started
+    environment:
+      ME_CONFIG_SITE_BASEURL: ${MONGODB_STUDENT_SUBPATH:?MONGODB_STUDENT_SUBPATH not set}/
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "false"
+      ME_CONFIG_MONGODB_SERVER: 'mongo'
+      ME_CONFIG_MONGODB_AUTH_DATABASE: "${MONGODB_INIT_DB:?MONGODB_INIT_DB not set}"
+      ME_CONFIG_MONGODB_AUTH_USERNAME: "${MONGODB_STUDENT_USERNAME:?MONGODB_STUDENT_USERNAME not set}"
+      ME_CONFIG_MONGODB_AUTH_PASSWORD: "${MONGODB_STUDENT_PASSWORD:?MONGODB_STUDENT_PASSWORD not set}"
+    labels:
+      caddy: "${DOMAIN:?DOMAIN not set}"
+      # Serve Mongo Express from subpath /mongo-student
+      caddy.handle: "${MONGODB_STUDENT_SUBPATH:?MONGODB_STUDENT_SUBPATH not set}/*"
+      caddy.handle.reverse_proxy: "{{upstreams http 8081}}"
+      caddy.redir: "${MONGODB_STUDENT_SUBPATH:?MONGODB_STUDENT_SUBPATH not set} ${MONGODB_STUDENT_SUBPATH:?MONGODB_STUDENT_SUBPATH not set}/"
