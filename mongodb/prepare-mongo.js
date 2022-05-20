@@ -1,7 +1,78 @@
 db = db.getSiblingDB('geosensorweb')
 
-db.createCollection('student')
-db.createCollection('admin')
+validator = {
+  validator: {
+    "$jsonSchema": {
+      bsonType: "object",
+      properties: {
+        name: {
+          bsonType: "string",
+          description: "Device name, required."
+        },
+        dev_eui: {
+          bsonType: "string",
+          description: "Upper case DEV_EUI, required."
+        },
+        group_id: {
+          bsonType: "int",
+          minimum: 0,
+          maximum: 100,
+        },
+        mappings: {
+          bsonType: "array",
+          minItems: 1,
+          uniqueItems: true,
+          items: {
+            bsonType: "object",
+            properties: {
+              lpp_id: {
+                bsonType: "int",
+                minimum: 0,
+                maximum: 9999,
+              },
+              sta_servers: {
+                bsonType: "array",
+                minItems: 1,
+                uniqueItems: true,
+                items: {
+                  bsonType: "object",
+                  properties: {
+                    sta_url: {
+                      bsonType: "string"
+                    },
+                    iot_id: {
+                      bsonType: "int"
+                    }
+                  },
+                  required: [
+                    "sta_url",
+                    "iot_id"
+                  ]
+                }
+              }
+            },
+            required: [
+              "lpp_id",
+              "sta_servers"
+            ]
+          },
+        }
+      },
+      required: [
+        "name",
+        "dev_eui",
+        "mappings"
+      ]
+    }
+  },
+  validationAction: "error"
+}
+
+db.createCollection('student', validator)
+db.student.createIndex({ dev_eui: 1 }, { unique: true })
+
+db.createCollection('admin', validator)
+db.admin.createIndex({ dev_eui: 1 }, { unique: true })
 
 db.createRole({
   role: "student-role",
@@ -18,67 +89,10 @@ db.createRole({
 
 db.createUser({
   user: 'student',
-  pwd: 'geoSensorWeb2022',
+  pwd: 'changeMe',
   roles: [
     { role: 'student-role', db: 'geosensorweb' },
     { role: 'read', db: 'geosensorweb' }
-  ]
-})
-
-db.student.createIndex({ name: "idx_dev_eui_asc" }, { dev_eui: 1 }, { unique: true })
-db.admin.createIndex({ name: "idx_dev_eui_asc" }, { dev_eui: 1 }, { unique: true })
-
-db.student.insert({
-  _id: '8765182202E81AAB',
-  name: 'tumgis-testnode-swm-0126_outdoor',
-  group_id: 99,
-  dev_eui: '8765182202E81EAAB',
-  mappings: [{
-      lpp_id: 1,
-      sta_servers: [{
-          sta_url: 'https://gi3.gis.lrg.tum.de/frost/v1.1',
-          iot_id: 5
-        },
-        {
-          sta_url: 'https://otherSTA.gis.lrg.tum.de/frost/v1.1',
-          iot_id: 5
-        }
-      ]
-    },
-    {
-      lpp_id: 4,
-      sta_servers: [{
-        sta_url: 'https://otherSTA.gis.lrg.tum.de/frost/v1.1',
-        iot_id: 5
-      }]
-    }
-  ]
-})
-
-db.admin.insert({
-  _id: '8765182202E81AAB',
-  name: 'tumgis-testnode-swm-0126_outdoor',
-  group_id: 99,
-  dev_eui: '8765182202E81EAAB',
-  mappings: [{
-      lpp_id: 1,
-      sta_servers: [{
-          sta_url: 'https://gi3.gis.lrg.tum.de/frost/v1.1',
-          iot_id: 5
-        },
-        {
-          sta_url: 'https://otherSTA.gis.lrg.tum.de/frost/v1.1',
-          iot_id: 5
-        }
-      ]
-    },
-    {
-      lpp_id: 4,
-      sta_servers: [{
-        sta_url: 'https://otherSTA.gis.lrg.tum.de/frost/v1.1',
-        iot_id: 5
-      }]
-    }
   ]
 })
 
