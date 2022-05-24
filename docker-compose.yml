@@ -37,7 +37,7 @@ services:
     networks:
       - net
     healthcheck:
-      test: ["CMD-SHELL", "curl -o /dev/null --silent --head --write-out '%{http_code}\n' http://localhost:2019/metrics | grep 200"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:2019/metrics || exit 1"]
       # interval: 1m30s
       interval: 10s
       timeout: 10s
