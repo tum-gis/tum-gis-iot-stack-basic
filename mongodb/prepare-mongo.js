@@ -99,7 +99,7 @@ db = db.getSiblingDB('admin')
 
 db.createUser({
   user: 'admin',
-  pwd: 'llaBCd0lLLlQunoE7PDtb3x4Psed0N!',
+  pwd: 'changeMe',
   roles: [
     { role: 'readWriteAnyDatabase', db: 'admin' }
   ]
