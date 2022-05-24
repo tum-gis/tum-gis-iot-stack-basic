@@ -84,6 +84,9 @@ services:
       persistence_autoUpdateDatabase: "true"
       persistence_alwaysOrderbyId: "true"
       persistence_queryTimeout: "240"
+      mqtt_enabled: "true"
+      mqtt_host: ${DOMAIN:?DOMAIN not set}
+
       # Uncomment this to enable BasicAuth
       # https://fraunhoferiosb.github.io/FROST-Server/settings/auth.html
       # auth_provider: "de.fraunhofer.iosb.ilt.frostserver.auth.basic.BasicAuthProvider"
