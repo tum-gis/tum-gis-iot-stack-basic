@@ -234,7 +234,7 @@ services:
 
   # MongoDB -------------------------------------------------------------------
   mongo:
-    image: mongo
+    image: mongo:${MONGODB_VERSION:?MONGODB_VERSION not set}
     restart: unless-stopped
     networks:
     - net
