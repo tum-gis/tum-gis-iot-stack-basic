@@ -16,7 +16,7 @@ validator = {
         group_id: {
           bsonType: "int",
           minimum: 0,
-          maximum: 100,
+          maximum: 1000,
         },
         mappings: {
           bsonType: "array",
@@ -78,7 +78,6 @@ db.createRole({
   role: "student-role",
   privileges: [{
     resource: {
-      role: 'readWrite',
       db: 'geosensorweb',
       collection: 'student'
     },
