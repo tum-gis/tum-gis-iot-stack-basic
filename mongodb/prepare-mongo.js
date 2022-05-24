@@ -95,12 +95,10 @@ db.createUser({
   ]
 })
 
-db = db.getSiblingDB('admin')
-
 db.createUser({
   user: 'admin',
   pwd: 'changeMe',
   roles: [
-    { role: 'readWriteAnyDatabase', db: 'admin' }
+    { role: 'readWrite', db: 'geosensorweb' }
   ]
 })
