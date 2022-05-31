@@ -5,8 +5,7 @@ deleteDatasources:
 
 datasources:
 - name: "FROST-Server - v1.1"
-  type: linksmart-sensorthings-datasource
-  access: proxy
+  type: iosb-sensorthings-datasource
   url: http://frost-web:8080/FROST-Server/v1.1
   isDefault: true
   editable: true
