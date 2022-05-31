@@ -172,8 +172,9 @@ services:
     environment:
       GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,
         grafana-worldmap-panel,marcusolsson-json-datasource,linksmart-sensorthings-datasource,snuids-trafficlights-panel,citilogics-geoloop-panel
-        ,https://github.com/briangann/grafana-gauge-panel/releases/download/v0.0.9/briangann-gauge-panel-0.0.9.zip;briangann-gauge-panel
-        ,https://github.com/FraunhoferIOSB/frost-sensorthings-datasource/releases/download/v0.0.3/iosb-sensorthings-datasource-0.0.3.zip;iosb-sensorthings-datasource"
+        ,https://github.com/briangann/grafana-gauge-panel/releases/download/v0.0.9/briangann-gauge-panel-0.0.9.zip;briangann-gauge-panel,iosb-sensorthings-datasource"
+        # Use and adapt the line below dev versions from Github
+        # ,https://github.com/FraunhoferIOSB/frost-sensorthings-datasource/releases/download/v0.0.3/iosb-sensorthings-datasource-0.0.3.zip;iosb-sensorthings-datasource"
       GF_SERVER_DOMAIN: "${DOMAIN:?DOMAIN not set}"
       GF_SERVER_ROOT_URL: "https://${DOMAIN:?DOMAIN not set}${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}"
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
@@ -187,8 +188,8 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD not set}"
       # Dashbord embedding
       GF_SECURITY_ALLOW_EMBEDDING: "true"
-      # Unsigned plugins
-      GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: "iosb-sensorthings-datasource"
+      # Unsigned plugins (uncomment and list plugin ids comma separated if needed)
+      # GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: "iosb-sensorthings-datasource"
     labels:
       caddy: "${DOMAIN:?DOMAIN not set}"
       caddy.handle: "${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}/*"
