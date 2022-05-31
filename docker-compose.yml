@@ -171,8 +171,8 @@ services:
         - BASEIMAGE_TAG=${GRAFANA_VERSION:?GRAFANA_VERSION not set}
     environment:
       GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,
-        grafana-worldmap-panel,marcusolsson-json-datasource,linksmart-sensorthings-datasource,snuids-trafficlights-panel,citilogics-geoloop-panel
-        ,https://github.com/briangann/grafana-gauge-panel/releases/download/v0.0.9/briangann-gauge-panel-0.0.9.zip;briangann-gauge-panel,iosb-sensorthings-datasource"
+        grafana-worldmap-panel,marcusolsson-json-datasource,snuids-trafficlights-panel,citilogics-geoloop-panel,iosb-sensorthings-datasource
+        ,https://github.com/briangann/grafana-gauge-panel/releases/download/v0.0.9/briangann-gauge-panel-0.0.9.zip;briangann-gauge-panel"
         # Use and adapt the line below dev versions from Github
         # ,https://github.com/FraunhoferIOSB/frost-sensorthings-datasource/releases/download/v0.0.3/iosb-sensorthings-datasource-0.0.3.zip;iosb-sensorthings-datasource"
       GF_SERVER_DOMAIN: "${DOMAIN:?DOMAIN not set}"
