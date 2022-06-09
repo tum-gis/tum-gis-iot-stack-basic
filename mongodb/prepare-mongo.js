@@ -18,7 +18,7 @@ validator = {
           minimum: 0,
           maximum: 1000,
         },
-        mappings: {
+        datastreams: {
           bsonType: "array",
           minItems: 1,
           uniqueItems: true,
@@ -40,13 +40,52 @@ validator = {
                     sta_url: {
                       bsonType: "string"
                     },
-                    iot_id: {
+                    datastream_iot_id: {
                       bsonType: "int"
                     }
                   },
                   required: [
                     "sta_url",
-                    "iot_id"
+                    "datastream_iot_id"
+                  ]
+                }
+              }
+            },
+            required: [
+              "lpp_id",
+              "sta_servers"
+            ]
+          },
+        },
+        locations: {
+          bsonType: "array",
+          minItems: 1,
+          uniqueItems: true,
+          items: {
+            bsonType: "object",
+            properties: {
+              lpp_id: {
+                bsonType: "int",
+                minimum: 0,
+                maximum: 9999,
+              },
+              sta_servers: {
+                bsonType: "array",
+                minItems: 1,
+                uniqueItems: true,
+                items: {
+                  bsonType: "object",
+                  properties: {
+                    sta_url: {
+                      bsonType: "string"
+                    },
+                    thing_iot_id: {
+                      bsonType: "int"
+                    }
+                  },
+                  required: [
+                    "sta_url",
+                    "thing_iot_id"
                   ]
                 }
               }
@@ -61,7 +100,7 @@ validator = {
       required: [
         "name",
         "dev_eui",
-        "mappings"
+        "datastreams"
       ]
     }
   },
