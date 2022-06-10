@@ -173,7 +173,7 @@ services:
       args:
         - BASEIMAGE_TAG=${GRAFANA_VERSION:?GRAFANA_VERSION not set}
     environment:
-      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,
+      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,iosb-sensorthings-datasource,
         grafana-worldmap-panel,marcusolsson-json-datasource,linksmart-sensorthings-datasource,snuids-trafficlights-panel
         ,https://github.com/briangann/grafana-gauge-panel/releases/download/v0.0.9/briangann-gauge-panel-0.0.9.zip;briangann-gauge-panel,
         citilogics-geoloop-panel"
