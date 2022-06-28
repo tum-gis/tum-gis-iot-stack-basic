@@ -12,6 +12,11 @@ volumes:
 
   grafana_config:
 
+  grafana9_data:
+    # external: true
+
+  grafana9_config:
+
   frost_db_data:
     # external: true
 
@@ -197,6 +202,51 @@ services:
       caddy.handle: "${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}/*"
       caddy.handle.reverse_proxy: "{{upstreams http 3000}}"
       caddy.redir: "${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set} ${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}/"
+
+
+# Grafana9 ------------------------------------------------------------------
+  grafana9:
+    # container_name: grafana
+    image: grafana/grafana-oss:${GRAFANA9_VERSION:?GRAFANA9_VERSION not set}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - grafana_config:/etc/grafana
+    networks:
+      - net
+    # ports:
+    #  - 3000:3000/tcp
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", 'bash', '-c', 'wget -S "http://127.0.0.1:3000/api/health" |& grep "200 OK"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource,
+        grafana-worldmap-panel,marcusolsson-json-datasource,snuids-trafficlights-panel,citilogics-geoloop-panel,iosb-sensorthings-datasource
+        ,https://github.com/briangann/grafana-gauge-panel/releases/download/v0.0.9/briangann-gauge-panel-0.0.9.zip;briangann-gauge-panel"
+        # Use and adapt the line below dev versions from Github
+        # ,https://github.com/FraunhoferIOSB/frost-sensorthings-datasource/releases/download/v0.0.3/iosb-sensorthings-datasource-0.0.3.zip;iosb-sensorthings-datasource"
+      GF_SERVER_DOMAIN: "${DOMAIN:?DOMAIN not set}"
+      GF_SERVER_ROOT_URL: "https://${DOMAIN:?DOMAIN not set}${GRAFANA9_SUBPATH:?GRAFANA9_SUBPATH not set}"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_DATE_FORMATS_FULL_DATE: "dd, DD.MM.YYYY HH:mm:ss"
+      GF_DATE_FORMATS_INTERVAL_MONTH: "YYYY.MM"
+      GF_DATE_FORMATS_INTERVAL_DAY: "dd, DD.MM"
+      GF_DATE_FORMATS_INTERVAL_HOUR: "dd, DD.MM HH:mm"
+      GF_DATE_FORMATS_INTERVAL_MINUTE: "dd, HH:mm"
+      # Admin user
+      GF_SECURITY_ADMIN_USER: "${GRAFANA9_ADMIN_USER:?GRAFANA_ADMIN_USER not set}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA9_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD not set}"
+      # Dashbord embedding
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      # Unsigned plugins (uncomment and list plugin ids comma separated if needed)
+      # GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: "iosb-sensorthings-datasource"
+    labels:
+      caddy: "${DOMAIN:?DOMAIN not set}"
+      caddy.handle: "${GRAFANA9_SUBPATH:?GRAFANA9_SUBPATH not set}/*"
+      caddy.handle.reverse_proxy: "{{upstreams http 3000}}"
+      caddy.redir: "${GRAFANA9_SUBPATH:?GRAFANA9_SUBPATH not set} ${GRAFANA9_SUBPATH:?GRAFANA9_SUBPATH not set}/"
 
   # NodeRED -------------------------------------------------------------------
   nodered:
