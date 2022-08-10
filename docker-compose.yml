@@ -210,6 +210,10 @@ services:
       NODE_RED_CREDENTIAL_SECRET: "${NODE_RED_CREDENTIAL_SECRET:?NODE_RED_CREDENTIAL_SECRET not set}"
       TZ: "Europe/Berlin"
       NODE_RED_ENABLE_PROJECTS: "${NODE_RED_ENABLE_PROJECTS:?NODE_RED_ENABLE_PROJECTS not set}"
+      # Admin access
+      # See: https://nodered.org/docs/user-guide/runtime/securing-node-red#generating-the-password-hash
+      NODE_RED_ADMIN_USERNAME: "${NODE_RED_ADMIN_USERNAME:?NODE_RED_ADMIN_USERNAME not set}"
+      NODE_RED_ADMIN_PASSWORD: "${NODE_RED_ADMIN_PASSWORD:?NODE_RED_ADMIN_PASSWORD not set}"
       # NODE_OPTIONS: "--max_old_space_size=128"
     build:
       context: nodered
