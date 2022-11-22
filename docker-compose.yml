@@ -209,8 +209,8 @@ services:
     # container_name: grafana
     image: grafana/grafana-oss:${GRAFANA9_VERSION:?GRAFANA9_VERSION not set}
     volumes:
-      - grafana_data:/var/lib/grafana
-      - grafana_config:/etc/grafana
+      - grafana9_data:/var/lib/grafana
+      - grafana9_config:/etc/grafana
     networks:
       - net
     # ports:
