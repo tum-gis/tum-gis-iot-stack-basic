@@ -21,8 +21,7 @@ volumes:
 # Networks ####################################################################
 networks:
   net:
-    driver: overlay
-    attachable: true
+    driver: bridge
 
 # Services ####################################################################
 services:
