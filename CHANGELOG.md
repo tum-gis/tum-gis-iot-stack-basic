@@ -12,7 +12,11 @@ For releases `< 1.0.0` minor version steps may indicate breaking changes.
 
 ### Changed
 
+- Update to Grafana 9
+
 ### Removed
+
+- Provisioned datasource ffor Grafana
 
 ### Fixed
 
@@ -21,6 +25,12 @@ For releases `< 1.0.0` minor version steps may indicate breaking changes.
 ### Deprecated
 
 ## [0.0.1] - 2023-04-13
+
+Initial release.
+
+### Deprecated
+
+- Grafana 7 support will be dropped in the next version
 
 ## [template] - YYYY-MM-DD
 
