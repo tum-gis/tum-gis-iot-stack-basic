@@ -16,7 +16,7 @@ For releases `< 1.0.0` minor version steps may indicate breaking changes.
 
 ### Removed
 
-- Provisioned datasource ffor Grafana
+- Provisioned datasource for Grafana
 
 ### Fixed
 
