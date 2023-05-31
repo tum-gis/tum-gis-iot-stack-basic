@@ -162,7 +162,7 @@ services:
     environment:
       GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource, grafana-worldmap-panel, marcusolsson-json-datasource,
         snuids-trafficlights-panel, citilogics-geoloop-panel, iosb-sensorthings-datasource, yesoreyeram-boomtheme-panel,
-        snuids-svg-panel, marcusolsson-hourly-heatmap-panel, citilogics-geoloop-panel, snuids-svg-panel,
+        snuids-svg-panel, marcusolsson-hourly-heatmap-panel, citilogics-geoloop-panel,
         fatcloud-windrose-panel,https://github.com/briangann/grafana-gauge-panel/releases/download/v0.0.9/briangann-gauge-panel-0.0.9.zip;briangann-gauge-panel"
       GF_SERVER_DOMAIN: "${DOMAIN:?DOMAIN not set}"
       GF_SERVER_ROOT_URL: "https://${DOMAIN:?DOMAIN not set}${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}"
