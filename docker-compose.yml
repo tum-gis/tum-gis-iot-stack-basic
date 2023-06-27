@@ -310,7 +310,7 @@ services:
       # Overrides the base URL used within the OpenAPI self-documentation hosted at the API root path
       - PGRST_OPENAPI_SERVER_PROXY_URI=https://${DOMAIN:?DOMAIN not set}/${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}
     networks:
-      - postgrest-backend
+      - net
     restart: always
     labels:
       caddy: "${DOMAIN:?DOMAIN not set}"
@@ -319,4 +319,4 @@ services:
       caddy.redir: "${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set} ${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}/"
     depends_on:
       postgrest-db:
-        condition: service_started
+        condition: service_healthy
