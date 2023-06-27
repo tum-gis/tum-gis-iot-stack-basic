@@ -323,3 +323,17 @@ services:
     depends_on:
       frost-db:
         condition: service_healthy
+
+  # Swagger UI ----------------------------------------------------------------
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    networks:
+      - net
+    environment:
+      - API_URL=https://${DOMAIN:?DOMAIN not set}/${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}
+    restart: always
+    labels:
+      caddy: "${DOMAIN:?DOMAIN not set}"
+      caddy.handle_path: "${SWAGGER_SUBPATH:?SWAGGER_SUBPATH not set}/*"
+      caddy.handle_path.reverse_proxy: "{{upstreams http 8080}}"
+      caddy.redir: "${SWAGGER_SUBPATH:?SWAGGER_SUBPATH not set} ${SWAGGER_SUBPATH:?SWAGGER_SUBPATH not set}/"
