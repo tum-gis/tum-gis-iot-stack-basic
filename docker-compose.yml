@@ -308,7 +308,7 @@ services:
       # The database role to use when no client authentication is provided
       - PGRST_DB_ANON_ROLE=${PGRST_DB_ANON_ROLE}
       # Overrides the base URL used within the OpenAPI self-documentation hosted at the API root path
-      - PGRST_OPENAPI_SERVER_PROXY_URI=https://${DOMAIN:?DOMAIN not set}/${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}
+      - PGRST_OPENAPI_SERVER_PROXY_URI=https://${DOMAIN:?DOMAIN not set}${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}
       - PGRST_MAX_ROWS=${PGRST_MAX_ROWS}
       - PGRST_DB_POOL=${PGRST_DB_POOL}
       - PGRST_DB_POOL_TIMEOUT=${PGRST_DB_POOL_TIMEOUT}
@@ -330,7 +330,7 @@ services:
     networks:
       - net
     environment:
-      - API_URL=https://${DOMAIN:?DOMAIN not set}/${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}
+      - API_URL=https://${DOMAIN:?DOMAIN not set}${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}
     restart: always
     labels:
       caddy: "${DOMAIN:?DOMAIN not set}"
