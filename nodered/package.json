@@ -32,7 +32,6 @@
     "node-red-contrib-buffer-array": "*",
     "node-red-contrib-cayennelpp-extended": "*",
     "node-red-contrib-counter": "*",
-    "node-red-contrib-embedded-file": "*",
     "node-red-contrib-google-sheets": "*",
     "node-red-contrib-interval-length": "*",
     "node-red-contrib-splitter": "*",
