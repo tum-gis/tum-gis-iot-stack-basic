@@ -12,11 +12,6 @@ volumes:
 
   grafana_config:
 
-  grafana9_data:
-    # external: true
-
-  grafana9_config:
-
   frost_db_data:
     # external: true
 
