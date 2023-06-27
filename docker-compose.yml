@@ -290,3 +290,33 @@ services:
       caddy.handle: "${MONGODB_STUDENT_SUBPATH:?MONGODB_STUDENT_SUBPATH not set}/*"
       caddy.handle.reverse_proxy: "{{upstreams http 8081}}"
       caddy.redir: "${MONGODB_STUDENT_SUBPATH:?MONGODB_STUDENT_SUBPATH not set} ${MONGODB_STUDENT_SUBPATH:?MONGODB_STUDENT_SUBPATH not set}/"
+
+  # PostgREST -----------------------------------------------------------------
+  postgrest:
+    container_name: postgrest
+    image: postgrest/postgrest:latest
+    # ports:
+    #   - "3000:3000"
+    # Available environment variables documented here:
+    # https://postgrest.org/en/latest/configuration.html#environment-variables
+    environment:
+      # The standard connection URI format, documented at
+      # https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING
+      - PGRST_DB_URI=postgres://${POSTGREST_USER}:${POSTGREST_PASSWORD}@${POSTGREST_HOST}:${POSTGREST_PORT}/${POSTGREST_DB}
+      # The name of which database schema to expose to REST clients
+      - PGRST_DB_SCHEMA=${PGRST_DB_SCHEMA}
+      # The database role to use when no client authentication is provided
+      - PGRST_DB_ANON_ROLE=${PGRST_DB_ANON_ROLE}
+      # Overrides the base URL used within the OpenAPI self-documentation hosted at the API root path
+      - PGRST_OPENAPI_SERVER_PROXY_URI=https://${DOMAIN:?DOMAIN not set}/${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}
+    networks:
+      - postgrest-backend
+    restart: always
+    labels:
+      caddy: "${DOMAIN:?DOMAIN not set}"
+      caddy.handle_path: "${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}/*"
+      caddy.handle_path.reverse_proxy: "{{upstreams http 3000}}"
+      caddy.redir: "${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set} ${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}/"
+    depends_on:
+      postgrest-db:
+        condition: service_started
