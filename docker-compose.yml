@@ -293,7 +293,6 @@ services:
 
   # PostgREST -----------------------------------------------------------------
   postgrest:
-    container_name: postgrest
     image: postgrest/postgrest:latest
     # ports:
     #   - "3000:3000"
