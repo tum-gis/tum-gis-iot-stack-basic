@@ -318,5 +318,5 @@ services:
       caddy.handle_path.reverse_proxy: "{{upstreams http 3000}}"
       caddy.redir: "${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set} ${POSTGREST_SUBPATH:?POSTGREST_SUBPATH not set}/"
     depends_on:
-      postgrest-db:
+      frost-db:
         condition: service_healthy
