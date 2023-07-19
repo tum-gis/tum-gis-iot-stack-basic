@@ -178,6 +178,8 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD not set}"
       # Dashbord embedding
       GF_SECURITY_ALLOW_EMBEDDING: "true"
+      # Grafana 10 feature toggles
+      GF_FEATURE_TOGGLES_ENABLE: publicDashboards
     labels:
       caddy: "${DOMAIN:?DOMAIN not set}"
       caddy.handle: "${GRAFANA_SUBPATH:?GRAFANA_SUBPATH not set}/*"
