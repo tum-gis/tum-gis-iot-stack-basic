@@ -8,11 +8,13 @@ For releases `< 1.0.0` minor version steps may indicate breaking changes.
 
 ## [Unreleased] - YYYY-MM-DD
 
+## [0.0.2] - 2023-07-21
+
 ### Added
 
 ### Changed
 
-- Update to Grafana 9
+- Update to Grafana 10
 
 ### Removed
 
@@ -46,6 +48,7 @@ Initial release.
 
 ### Deprecated
 
-[Unreleased]: https://github.com/tum-gis/tum-gis-iot-stack-basic/compare/0.0.1...HEAD
+[Unreleased]: https://github.com/tum-gis/tum-gis-iot-stack-basic/compare/0.0.2...HEAD
+[0.0.2]: https://github.com/tum-gis/tum-gis-iot-stack-basic/compare/0.0.1...0.0.2
 [0.0.1]: https://github.com/tum-gis/tum-gis-iot-stack-basic/releases/tag/0.0.1
 [template]: https://keepachangelog.com/en/1.0.0/
